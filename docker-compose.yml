@@ -44,6 +44,6 @@ services:
       - MINIO_BUCKET=demo-bucket
 
 volumes:
-  minio_
+  minio_data:
   file_storage:
   block_storage:
