@@ -20,8 +20,13 @@ COPY src/ /var/www/html/
 # Install PHP dependencies (AWS SDK)
 RUN composer install --no-dev --optimize-autoloader
 
-# Fix permissions for volumes
-RUN chown -R www-www-data /var/www/html/storage
+# Create the storage directories explicitly
+RUN mkdir -p /var/www/html/storage/file /var/www/html/storage/block
+
+# Use the correct user 'www-data' (not 'www-www-data')
+RUN chown -R www-data:www-data /var/www/html/storage
+
+# Ensure permissions allow writing
 RUN chmod -R 777 /var/www/html/storage
 
 # Enable Apache Rewrite (optional, good practice)
