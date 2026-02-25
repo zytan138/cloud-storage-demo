@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # 1. OBJECT STORAGE (Simulating AWS S3)
+  minio:
+    image: minio/minio
+    container_name: minio_storage
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PHP APPLICATION
+  app:
+    build: .
+    container_name: php_app
+    ports:
+      - "8080:80"
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      # 2. FILE STORAGE (Simulating AWS EFS / NFS)
+      # Shared across multiple containers in production
+      - file_storage:/var/www/html/storage/file
+      
+      # 3. BLOCK STORAGE (Simulating AWS EBS)
+      # Attached to single instance, high performance, DB use-case
+      - block_storage:/var/www/html/storage/block
+    environment:
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=password123
+      - MINIO_BUCKET=demo-bucket
+
+volumes:
+  minio_
+  file_storage:
+  block_storage:
